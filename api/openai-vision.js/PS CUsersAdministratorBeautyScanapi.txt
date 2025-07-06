@@ -1,0 +1,62 @@
+PS C:\Users\Administrator\BeautyScan\api\openai-vision.js> const { IncomingForm } = require('formidable');
+const : Die Benennung "const" wurde nicht als Name eines Cmdlet, einer Funktion, einer Skriptdatei oder eines
+ausführbaren Programms erkannt. Überprüfen Sie die Schreibweise des Namens, oder ob der Pfad korrekt ist (sofern
+enthalten), und wiederholen Sie den Vorgang.
+In Zeile:1 Zeichen:1
++ const { IncomingForm } = require('formidable');
++ ~~~~~
+    + CategoryInfo          : ObjectNotFound: (const:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\Users\Administrator\BeautyScan\api\openai-vision.js> const fs = require('fs');
+const : Die Benennung "const" wurde nicht als Name eines Cmdlet, einer Funktion, einer Skriptdatei oder eines
+ausführbaren Programms erkannt. Überprüfen Sie die Schreibweise des Namens, oder ob der Pfad korrekt ist (sofern
+enthalten), und wiederholen Sie den Vorgang.
+In Zeile:1 Zeichen:1
++ const fs = require('fs');
++ ~~~~~
+    + CategoryInfo          : ObjectNotFound: (const:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\Users\Administrator\BeautyScan\api\openai-vision.js>
+PS C:\Users\Administrator\BeautyScan\api\openai-vision.js> module.exports = async (req, res) => {
+>>   if (req.method !== 'POST') {
+>>     res.status(405).json({ error: 'Method not allowed' });
+>>     return;
+>>   }
+>>   try {
+>>     const data = await new Promise((resolve, reject) => {
+>>       const form = new IncomingForm();
+>>       form.parse(req, (err, fields, files) => {
+>>         if (err) reject(err);
+>>         else resolve({ fields, files });
+>>       });
+>>     });
+>>     const imageFile = data.files.image;
+>>     if (!imageFile) {
+>>       res.status(400).json({ error: 'No image uploaded' });
+>>       return;
+>>     }
+>>     const imageBuffer = fs.readFileSync(imageFile.filepath || imageFile.path);
+>>     const openaiRes = await fetch('https://api.openai.com/v1/images/vision/analyze', {
+>>       method: 'POST',
+>>       headers: {
+>>         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+>>         'Content-Type': 'application/octet-stream',
+>>       },
+>>       body: imageBuffer,
+>>     });
+>>     if (!openaiRes.ok) {
+>>       res.status(500).json({ error: 'OpenAI Vision API failed' });
+>>       return;
+>>     }
+>>     const openaiResult = await openaiRes.json();
+>>     const scores = openaiResult.scores || {};
+>>     const feedback = openaiResult.feedback || {};
+>>     const tips = openaiResult.tips || [];
+>>     res.status(200).json({ scores, feedback, tips });
+>>   } catch (err) {
+>>     res.status(500).json({ error: err?.message || 'Unknown error' });
+>>   }
+>> };
+
